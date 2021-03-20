@@ -26,11 +26,17 @@ namespace my
 
 		void time_passed()
 		{
-			fprintf(m_stream, "Timer \"%s\": %lld %s passed.\n",
-				m_name,
-				std::chrono::duration_cast<TimeUnit>(ChronoClock::now() - m_startPoint).count(),
-				m_timeUnitAbbreviation
-			);
+			const char* valueFormatSpecifier = std::is_same_v<TimeUnit::rep, int> ? "d" : "lld";
+			const char preFormat[] = "Timer \"%%s\": %%%s %%s passed.\n";
+			char format[sizeof(preFormat) - 2];
+			sprintf_s(format, preFormat, valueFormatSpecifier);
+
+			fprintf(m_stream, format, m_name, time_passed_value(), m_timeUnitAbbreviation);
+		}
+
+		decltype(auto) time_passed_value()
+		{
+			return std::chrono::duration_cast<TimeUnit>(ChronoClock::now() - m_startPoint).count();
 		}
 
 	private:
