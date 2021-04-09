@@ -22,7 +22,7 @@ namespace my
 	void thread_pool::add_job(Job job)
 	{
 		{
-			std::scoped_lock<std::mutex> queueLock(m_queueMutex);
+			std::scoped_lock queueLock(m_queueMutex);
 			m_jobsQueue.push(job);
 		}
 		m_cv.notify_one();
@@ -30,17 +30,23 @@ namespace my
 
 	bool thread_pool::any_pending_jobs()
 	{
-		return !m_jobsQueue.empty();
+		std::scoped_lock queueLock(m_queueMutex);
+		return !m_jobsQueue.empty() || m_busyThreadsCounter.load() != 0;
+	}
+
+	void thread_pool::join()
+	{
+		while (any_pending_jobs())
+		{
+			std::this_thread::yield();
+		}
 	}
 
 	void thread_pool::terminate(bool waitForPendingJobs)
 	{
 		if (waitForPendingJobs)
 		{
-			while (any_pending_jobs())
-			{
-				std::this_thread::yield();
-			}
+			join();
 		}
 
 		m_terminated = true;
@@ -60,10 +66,12 @@ namespace my
 			if (m_terminated)
 				return;
 
+			m_busyThreadsCounter.fetch_add(1);
 			auto job = m_jobsQueue.front();
 			m_jobsQueue.pop();
 			queueLock.unlock();
 			job();
+			m_busyThreadsCounter.fetch_sub(1);
 		}
 	}
 }

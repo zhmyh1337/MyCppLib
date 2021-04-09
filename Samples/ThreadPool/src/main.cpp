@@ -27,7 +27,7 @@ int main()
 	std::cout << "hi" << std::endl;
 	for (size_t i = 0; i < iterationsCount; i++)
 		threadPool.add_job(Job);
-	threadPool.terminate(true);
+	threadPool.join();
 #else
 	for (size_t i = 0; i < iterationsCount; i++)
 	{

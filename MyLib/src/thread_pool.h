@@ -5,6 +5,7 @@
 #include <condition_variable>
 #include <functional>
 #include <queue>
+#include <atomic>
 
 namespace my
 {
@@ -19,6 +20,7 @@ namespace my
 
 		void add_job(Job job);
 		bool any_pending_jobs();
+		void join();
 		void terminate(bool waitForPendingJobs = false);
 
 	private:
@@ -29,6 +31,7 @@ namespace my
 		std::condition_variable m_cv;
 		std::mutex m_queueMutex;
 		std::queue<Job> m_jobsQueue;
+		std::atomic<size_t> m_busyThreadsCounter;
 		bool m_terminated = false;
 	};
 }
