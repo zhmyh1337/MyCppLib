@@ -24,7 +24,6 @@ int main()
 
 #if 1
 	my::thread_pool threadPool(std::thread::hardware_concurrency());
-	std::cout << "hi" << std::endl;
 	for (size_t i = 0; i < iterationsCount; i++)
 		threadPool.add_job(Job);
 	threadPool.join();
